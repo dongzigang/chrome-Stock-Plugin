@@ -1,23 +1,27 @@
 <template>
 	<div class="popup_page">
-		this is popup page
-		<div class="popup_page_main">
-			this is popup page main
-		</div>
+    {{status}}
+    <button @click="toggleStatus(true)">open</button>
+    <button @click="toggleStatus(false)">close</button>
 	</div>
 </template>
 
 <script>
+  import { ref } from 'vue';
 	export default {
-
+    setup() {
+      let status = ref(true);
+      const toggleStatus = () =>{
+        console.log(this.status)
+      }
+      return {
+        status,
+        toggleStatus
+      };
+    }
 	}
 </script>
 
 <style lang="less" scoped>
-	.popup_page{
-		color: red;
-		.popup_page_main{
-			color: green;
-		}
-	}
+
 </style>

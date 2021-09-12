@@ -1,16 +1,17 @@
 {
 	"manifest_version": 2,
-	"name": "my-vue3-plugin",
-	"description": "基于vue3.x版本的chrome插件",
+	"name": "股票助手",
+	"description": "股票助手",
 	"version": "1.0.0",
 	"browser_action": {
-		"default_title": "my-vue3-plugin",
+		"default_title": "股票助手",
 		"default_icon": "assets/images/icon48.png",
 		"default_popup": "popup.html"
 	},
 	"permissions": [],
 	"background": {
-		"scripts": ["js/chunk-vendors.js", "js/background.js"]
+		"scripts": ["js/chunk-vendors.js", "js/background.js"],
+		"persistent": false
 	},
 	"icons": {
 		"16": "assets/images/icon16.png",
@@ -20,11 +21,23 @@
 	"content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 	"content_scripts": [
 		{
-			"matches": ["https://*.taobao.com/*"],
+			"matches": ["<all_urls>"],
 			"css": ["css/content.css"],
 			"js": ["js/chunk-vendors.js", "js/content.js"],
 			"run_at": "document_idle"
 		}
+	],
+	// 权限申请
+	"permissions":
+	[
+		"contextMenus", // 右键菜单
+		"tabs", // 标签
+		"notifications", // 通知
+		"webRequest", // web请求
+		"webRequestBlocking",
+		"storage", // 插件本地存储
+		"http://*/*", // 可以通过executeScript或者insertCSS访问的网站
+		"https://*/*" // 可以通过executeScript或者insertCSS访问的网站
 	],
 	"web_accessible_resources": ["js/inject.js"]
 }

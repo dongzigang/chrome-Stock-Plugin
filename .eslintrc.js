@@ -1,10 +1,10 @@
 module.exports = {
-  root: true,
+  root: false,
   globals: {
-    chrome: true,
+    chrome: false,
   },
   env: {
-    node: true
+    node: false
   },
   extends: [
     'plugin:vue/vue3-essential',
