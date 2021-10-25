@@ -1,5 +1,4 @@
 // 加载文件
-
 const filesInDirectory = dir =>
   new Promise(resolve =>
     dir.createReader().readEntries(entries => {

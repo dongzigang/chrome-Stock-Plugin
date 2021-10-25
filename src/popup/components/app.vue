@@ -7,15 +7,19 @@
 </template>
 
 <script>
-  import { ref } from 'vue';
+  import {reactive, toRefs} from 'vue';
 	export default {
     setup() {
-      let status = ref(true);
-      const toggleStatus = () =>{
-        console.log(this.status)
+      const data = reactive({
+        status: true
+
+      })
+      const toggleStatus = (starusParams) => {
+        data.status = starusParams
+        console.log(data.status)
       }
       return {
-        status,
+        ...toRefs(data),
         toggleStatus
       };
     }
