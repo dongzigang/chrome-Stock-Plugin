@@ -1,4 +1,5 @@
 import hotReload from '@/utils/hotReload'
+import { getStockSuggestList } from '../api/api'
 hotReload()
 const backInfo = {
   popopActive: true
@@ -13,6 +14,7 @@ window.popupActiveChange = (active) => {
   backInfo.popopActive = active;
   localStorage.setItem('popopActive', active);
 };
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.greeting === 'getBackGroundMessage') {
     chrome.tabs.query({
@@ -22,6 +24,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       sendResponse(backInfo);
     });
     return true;
+  } else if (request.greeting === 'searchKey') {
+    getStockSuggestList(request.data.searchKey).then((res) => {
+      sendResponse(res);
+    })
   }
   return true;
 })

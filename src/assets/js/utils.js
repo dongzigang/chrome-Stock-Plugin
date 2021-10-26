@@ -2,6 +2,7 @@ import axios from 'axios'
 export const STOCK_TYPE = ['sh', 'sz', 'hk', 'gb', 'us'];
 export async function request(params) {
   let url = params.url
+  alert(url)
   // @ts-ignore
   let result = await axios({
     method: params.method ? params.method : 'get',

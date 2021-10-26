@@ -5,25 +5,28 @@
         placeholder="请输入关键词查询，如：0000001 或 上证指数"
         @keyup.enter="searchStock"
       />
+    {{suggestList}}
 	</div>
 </template>
 
 <script>
 import {reactive, toRefs, onMounted} from 'vue';
-import { getStockSuggestList } from '../../api/api'
   export default {
     setup() {
       const data = reactive({
         status: false,
-        searchKey: ''
+        searchKey: '',
+        suggestList: ''
       })
       onMounted(async () => {
         getBgMessage();
       });
       const searchStock = () => {
         if (data.searchKey) {
-          getStockSuggestList(data.searchKey).then((res) => {
-            data.showSearchList = true
+          window.sendMessageToBackgroundPopupScript({
+            greeting: 'searchKey',
+            data: { searchKey: data.searchKey }
+          }, res => {
             data.suggestList = res
           })
         }
