@@ -29,7 +29,7 @@ module.exports = {
     "space-before-function-paren": "off",
     "no-empty": "off",
     "no-else-return": "off",
-    "no-unused-vars": [2, {"vars": "all", "args": "after-used"}],
+    "no-unused-vars": [0, {"vars": "all", "args": "after-used"}],
     "no-console": "off",
     'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off'
   }

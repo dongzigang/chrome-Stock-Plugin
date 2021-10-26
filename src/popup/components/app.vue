@@ -5,7 +5,7 @@
 </template>
 
 <script>
-  import {reactive, toRefs} from 'vue';
+  import {reactive, toRefs, onMounted} from 'vue';
   // eslint-disable-next-line no-undef
   const $BG = chrome.extension.getBackgroundPage();
 	export default {
@@ -13,13 +13,17 @@
       const data = reactive({
         status: true
       })
+
+      onMounted(async () => {
+        const atv = $BG.popopActive;
+        data.status = atv;
+      })
+
       const toggleStatus = (value) => {
         data.status = value
         $BG.popupActiveChange(value);
         chrome.tabs.query({}, tabs => {
-          const list = tabs.filter(item => item.url.indexOf('baidu') > -1);
-          list.forEach(item => {
-            console.log(item)
+          tabs.forEach(item => {
             chrome.tabs.sendMessage(item.id, {
               type: 'activeChange',
               active: value

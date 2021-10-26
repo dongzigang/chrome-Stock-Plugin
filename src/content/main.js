@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 import app from './components/app.vue'
-
 joinContent(app)
 injectJsInsert()
 
@@ -9,7 +10,9 @@ function joinContent (element) {
 	div.id = 'joinContentApp'
 	document.body.appendChild(div)
 	console.log(div)
-	createApp(element).mount('#joinContentApp')
+	const App = createApp(element)
+  App.use(ElementPlus)
+  App.mount('#joinContentApp')
 }
 
 function injectJsInsert () {
