@@ -20,27 +20,98 @@
         </div>
     </div>
     </div>
-    <div class="stock-list">
-
+    <div class="stock-list" :class="{'hideStockList': stockListHide}">
+      <div class="stockList-ctn">
+        <div class="stockList">
+          <div>
+            <div
+              v-for="item in stockList"
+              :key="item.increase"
+              class="stockItem"
+              :title="`今开${item.open} 昨收${item.yestclose}&#10最高${item.high} 最低${item.low}&#10成交量${item.volume} 成交额${item.amount}`"
+              :class="{'stockGreen':item.increase < 0 }">
+              <div class="stockItem-main">
+                <span class="increase-icon" v-show="item.increase < 0">↓</span>
+                <span class="increase-icon" v-show="item.increase >= 0">↑</span>
+                <span class="increase">{{item.increase}}%</span>
+                <span class="price">{{item.price}}</span>
+                <span class="name">{{item.name}}</span>
+              </div>
+              <img src="../../assets/images/del.png" class="del-icon" alt="删除" title="删除" @click="delStock(item)">
+            </div>
+          </div>
+        </div>
+      </div>
+      <img src="../../assets/images/open.png" class="open-icon" @click="hideList">
     </div>
 	</div>
 </template>
 
 <script>
 import {reactive, toRefs, onMounted} from 'vue';
+import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
   export default {
     setup() {
       const data = reactive({
+        // 搜索框
         status: false,
         searchKey: '',
         suggestList: '',
         showSearchInput: false,
-        showSearchList: false
+        showSearchList: false,
+        // 股票列表
+        stockListHide: true,
+        stockList: [],
+        stockCodeList: []
       })
       onMounted(async () => {
         getBgMessage();
+        getLocalStorage('stockCodeList', (stockCodeList) => {
+          data.stockCodeList = stockCodeList || []
+        })
         monitorKey(data)
+        refreshData()
       });
+      // 刷新数据
+      const refreshData = () => {
+        setInterval(() => {
+          if (data.stockCodeList[0] && data.status && !data.stockListHide) {
+            window.sendMessageToBackgroundPopupScript({
+              greeting: 'getStockList',
+              data: { codeList: data.stockCodeList }
+            }, res => {
+              res.forEach((item) => {
+                item.increase = ((item.price - item.open) / item.open * 100).toFixed(2)
+              })
+              data.stockList = res
+            })
+          }
+        }, 5000)
+      }
+      // 删除股票
+      const delStock = (stock) => {
+        data.stockCodeList.forEach((item, index) => {
+          if (item === stock.code) {
+            data.stockCodeList.splice(index, 1)
+          }
+        })
+        setLocalStorage('stockCodeList', data.stockCodeList)
+        data.stockList.forEach((item, index) => {
+          if (item.code === stock.code) {
+            data.stockList.splice(index, 1)
+          }
+        })
+      }
+      // 添加股票
+      const addStock = (stockMsg) => {
+        const code = stockMsg.label.substring(0, 8)
+        data.stockCodeList.push(code)
+        getStockList(data.stockCodeList)
+      }
+      // 隐藏股票列表
+      const hideList = () => {
+        data.stockListHide = !data.stockListHide
+      }
       const searchStock = () => {
         if (data.searchKey) {
           window.sendMessageToBackgroundPopupScript({
@@ -52,8 +123,20 @@ import {reactive, toRefs, onMounted} from 'vue';
           })
         }
       }
-      const addStock = () => {
-
+      const getStockList = (codeList) => {
+        window.sendMessageToBackgroundPopupScript({
+          greeting: 'getStockList',
+          data: { codeList }
+        }, res => {
+          const codeList = res.map((item) => {
+            return item.code
+          })
+          setLocalStorage('stockCodeList', codeList)
+          res.forEach((item) => {
+            item.increase = ((item.price - item.open) / item.open * 100).toFixed(2)
+          })
+          data.stockList = res
+        })
       }
       // 页面加载时获取当前的插件状态
       const getBgMessage = () => {
@@ -81,13 +164,17 @@ import {reactive, toRefs, onMounted} from 'vue';
       return {
         ...toRefs(data),
         getBgMessage,
-        searchStock
+        searchStock,
+        addStock,
+        hideList,
+        delStock
       };
     }
 	}
+	// 监听按键
   function monitorKey (state) {
     document.onkeyup = (e) => {
-      if (e && e.shiftKey && e.keyCode === 70) { // 按 f 显示搜索框
+      if (e && e.shiftKey && e.keyCode === 70) { // 按  shift + f 显示搜索框
         state.showSearchInput = true
         state.inputAutoFocus = true
       }
@@ -123,15 +210,61 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
 </script>
 
 <style lang="less" scoped>
+  * {
+    box-sizing: border-box;
+  }
+  .stockItem-main {
+    display: flex;
+    align-items: center;
+    .increase-icon {
+      margin-right: 5px;
+    }
+  }
+  .stockList-ctn {
+    height: 100%;
+    overflow-y: auto;
+  }
+  .del-icon {
+    display: none;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+  .increase {
+    display: inline-block;
+    width: 60px;
+  }
+  .price {
+    display: inline-block;
+    width: 60px;
+  }
+  .open-icon {
+    cursor: pointer;
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    left: -30px;
+    top: 50%;
+    transform: translate(0, 50%);
+    z-index: 99999;
+  }
 	.stock-list{
-		background: aqua;
+    font-size: 14px;
+    padding: 10px;
+    border-radius: 3px;
+    border:1px solid rgb(204,204,204);
+		background: #ffffff;
 		position: fixed;
     width: 250px;
     height: 500px;
 		z-index: 100001;
-		right: 10px;
-		bottom: 10px;
+		right: 0;
+		bottom: 0;
+    transition: all 1s inherit;
 	}
+  .hideStockList {
+    right: -250px
+  }
   .suggestList {
     border: 1px solid rgb(204,204,204);
     border-radius: 0 0 5px 5px;
@@ -167,5 +300,40 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     border-radius: 5px;
     outline-color: #409EFF;
     padding: 0 5px;
+  }
+  .stockItem {
+    color: red;
+    line-height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    >span {
+      display: inline-block;
+      margin-right: 10px;
+    }
+    &:hover {
+      .del-icon {
+        display: inline-block;
+      }
+    }
+
+  }
+  .stockGreen {
+    color: green;
+  }
+  * {
+    &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      border-radius: 4px;
+      background-color: rgba(144, 147, 153, 0.3);
+    }
+
+    &::-webkit-scrollbar-track {
+      //background-color: ;
+    }
   }
 </style>

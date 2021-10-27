@@ -13,23 +13,23 @@ export async function request(params) {
   return result
 }
 
-export function getLocalStorage(key) {
-  let result = localStorage.getItem(key)
+export function getLocalStorage(key,callBack) {
   try {
-    if(result){
-      result = JSON.parse(result)
-    }
+    chrome.storage.local.get(key, (data)=>{
+      callBack && callBack(JSON.parse(data[key]))
+    });
   }finally {
 
   }
-  return result
 }
 export function setLocalStorage(key,value) {
   let _value = value
   if(_value && typeof _value === 'object'){
     _value = JSON.stringify(_value)
   }
-  localStorage.setItem(key,_value)
+  chrome.storage.local.set({[key]: _value}, function() {
+    console.log('保存股票成功')
+  });
 }
 export const calcFixedPirceNumber = (
   open,

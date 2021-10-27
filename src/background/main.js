@@ -1,5 +1,5 @@
 import hotReload from '@/utils/hotReload'
-import { getStockSuggestList } from '../api/api'
+import { getStockSuggestList, getStockList } from '../api/api'
 hotReload()
 const backInfo = {
   popopActive: true
@@ -26,6 +26,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return true;
   } else if (request.greeting === 'searchKey') {
     getStockSuggestList(request.data.searchKey).then((res) => {
+      sendResponse(res);
+    })
+  } else if (request.greeting === 'getStockList') {
+    getStockList(request.data.codeList).then((res) => {
       sendResponse(res);
     })
   }
