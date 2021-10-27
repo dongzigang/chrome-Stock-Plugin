@@ -1,30 +1,30 @@
 import axios from 'axios'
 export const STOCK_TYPE = ['sh', 'sz', 'hk', 'gb', 'us'];
 export async function request(params) {
-  let url = params.url
+  const url = params.url
   // @ts-ignore
-  let result = await axios({
+  const result = await axios({
     method: params.method ? params.method : 'get',
     url: url,
     data: params.data
-  }).then((res)=>{
+  }).then((res) => {
     return res.data
   });
   return result
 }
 
-export function getLocalStorage(key,callBack) {
+export function getLocalStorage(key, callBack) {
   try {
-    chrome.storage.local.get(key, (data)=>{
+    chrome.storage.local.get(key, (data) => {
       callBack && callBack(JSON.parse(data[key]))
     });
-  }finally {
+  } finally {
 
   }
 }
-export function setLocalStorage(key,value) {
+export function setLocalStorage(key, value) {
   let _value = value
-  if(_value && typeof _value === 'object'){
+  if (_value && typeof _value === 'object') {
     _value = JSON.stringify(_value)
   }
   chrome.storage.local.set({[key]: _value}, function() {
@@ -38,17 +38,17 @@ export const calcFixedPirceNumber = (
   high,
   low
 ) => {
-  let reg = /0+$/g;
+  const reg = /0+$/g;
   open = open.replace(reg, '');
   yestclose = yestclose.replace(reg, '');
   price = price.replace(reg, '');
   high = high.replace(reg, '');
   low = low.replace(reg, '');
-  let o = open.indexOf('.') === -1 ? 0 : open.length - open.indexOf('.') - 1;
-  let yc = yestclose.indexOf('.') === -1 ? 0 : yestclose.length - yestclose.indexOf('.') - 1;
-  let p = price.indexOf('.') === -1 ? 0 : price.length - price.indexOf('.') - 1;
-  let h = high.indexOf('.') === -1 ? 0 : high.length - high.indexOf('.') - 1;
-  let l = low.indexOf('.') === -1 ? 0 : low.length - low.indexOf('.') - 1;
+  const o = open.indexOf('.') === -1 ? 0 : open.length - open.indexOf('.') - 1;
+  const yc = yestclose.indexOf('.') === -1 ? 0 : yestclose.length - yestclose.indexOf('.') - 1;
+  const p = price.indexOf('.') === -1 ? 0 : price.length - price.indexOf('.') - 1;
+  const h = high.indexOf('.') === -1 ? 0 : high.length - high.indexOf('.') - 1;
+  const l = low.indexOf('.') === -1 ? 0 : low.length - low.indexOf('.') - 1;
   let max = Math.max(o, yc, p, h, l);
   if (max > 3) {
     max = 2; // 接口返回的指数数值的小数位为4，但习惯两位小数
@@ -66,3 +66,23 @@ export const formatNumber = (val = 0, fixed = 2, format = true) => {
   }
   return `${num.toFixed(fixed)}`;
 };
+/**
+ * 股票排序
+ * sortType : 0 不排序 1从大到小 -1 从小到大
+ * */
+export const sortStock = (list = [], sortType = 0, key = 'increase') => {
+  const _list = [...list]
+  if (sortType === 0) {
+    return _list
+  } else if (sortType === 1) {
+    _list.sort((a, b) => {
+      return a[key] - b[key]
+    })
+    return _list
+  } else if (sortType === -1) {
+    _list.sort((a, b) => {
+      return b[key] - a[key]
+    })
+    return _list
+  }
+}

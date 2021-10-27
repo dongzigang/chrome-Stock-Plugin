@@ -24,6 +24,8 @@
     <div class="stock-list" :class="{'hideStockList': stockListHide}">
       <div class="stock-title">
         <img src="../../assets/images/add.png"  @click="showAddInput" alt="" class="add-icon" title="添加股票">
+        <img src="../../assets/images/refresh.png"  @click="refreshData" alt="" class="add-icon" title="刷新">
+        <img src="../../assets/images/sort.png"  @click="sortData" alt="" class="add-icon" title="排序">
       </div>
       <div class="stockList-ctn">
         <div class="stockList">
@@ -51,7 +53,7 @@
 
 <script>
 import {reactive, toRefs, onMounted} from 'vue';
-import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
+import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/utils'
   export default {
     setup() {
       const data = reactive({
@@ -62,6 +64,7 @@ import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
         showSearchInput: false,
         showSearchList: false,
         // 股票列表
+        sortType: 0,
         stockListHide: false,
         stockList: [],
         stockCodeList: []
@@ -72,28 +75,34 @@ import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
           data.stockCodeList = stockCodeList || []
         })
         monitorKey(data)
-        refreshData()
+        setInterval(() => {
+          refreshData()
+        }, 5000)
       });
       // 显示搜索框
       const showAddInput = () => {
         data.showSearchInput = true
         data.inputAutoFocus = true
       }
+      // 排序
+      const sortData = () => {
+        const _sortType = data.sortType + 1 === 2 ? -1 : data.sortType + 1
+        data.sortType = _sortType
+        data.stockList = sortStock(data.stockList, _sortType)
+      }
       // 刷新数据
       const refreshData = () => {
-        setInterval(() => {
-          if (data.stockCodeList[0] && data.status && !data.stockListHide) {
-            window.sendMessageToBackgroundPopupScript({
-              greeting: 'getStockList',
-              data: { codeList: data.stockCodeList }
-            }, res => {
-              res.forEach((item) => {
-                item.increase = ((item.price - item.open) / item.open * 100).toFixed(2)
-              })
-              data.stockList = res
+        if (data.stockCodeList[0] && data.status && !data.stockListHide) {
+          window.sendMessageToBackgroundPopupScript({
+            greeting: 'getStockList',
+            data: { codeList: data.stockCodeList }
+          }, res => {
+            res.forEach((item) => {
+              item.increase = ((item.price - item.yestclose) / item.yestclose * 100).toFixed(2)
             })
-          }
-        }, 5000)
+            data.stockList = sortStock(res, data.sortType)
+          })
+        }
       }
       // 删除股票
       const delStock = (stock) => {
@@ -140,9 +149,9 @@ import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
           })
           setLocalStorage('stockCodeList', codeList)
           res.forEach((item) => {
-            item.increase = ((item.price - item.open) / item.open * 100).toFixed(2)
+            item.increase = ((item.price - item.yestclose) / item.yestclose * 100).toFixed(2)
           })
-          data.stockList = res
+          data.stockList = sortStock(res, data.sortType)
         })
       }
       // 页面加载时获取当前的插件状态
@@ -175,7 +184,9 @@ import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
         addStock,
         hideList,
         delStock,
-        showAddInput
+        showAddInput,
+        refreshData,
+        sortData
       };
     }
 	}
@@ -232,6 +243,9 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     align-items: center;
     padding: 0 10px;
     border-bottom: 1px solid rgb(204,204,204);
+    img {
+      margin-right: 10px;
+    }
   }
   .stockItem-main {
     display: flex;
