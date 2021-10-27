@@ -1,5 +1,6 @@
 <template>
 	<div class="content_page" v-if="status">
+    <!--  上方搜索框  -->
     <div class="searchBar" :class="{'showBar': showSearchInput}">
       <input
         class="searchBar-input"
@@ -7,7 +8,6 @@
         placeholder="请输入关键词查询，如：0000001 或 上证指数"
         @keyup.enter="searchStock"
       />
-
       <div class="suggestList" v-show="showSearchList">
         <div
           class="suggestList-item"
@@ -18,27 +18,29 @@
           {{item.label}}
           {{item.description}}
         </div>
+      </div>
     </div>
-    </div>
+    <!--  股票列表  -->
     <div class="stock-list" :class="{'hideStockList': stockListHide}">
+      <div class="stock-title">
+        <img src="../../assets/images/add.png"  @click="showAddInput" alt="" class="add-icon" title="添加股票">
+      </div>
       <div class="stockList-ctn">
         <div class="stockList">
-          <div>
-            <div
-              v-for="item in stockList"
-              :key="item.increase"
-              class="stockItem"
-              :title="`今开${item.open} 昨收${item.yestclose}&#10最高${item.high} 最低${item.low}&#10成交量${item.volume} 成交额${item.amount}`"
-              :class="{'stockGreen':item.increase < 0 }">
-              <div class="stockItem-main">
-                <span class="increase-icon" v-show="item.increase < 0">↓</span>
-                <span class="increase-icon" v-show="item.increase >= 0">↑</span>
-                <span class="increase">{{item.increase}}%</span>
-                <span class="price">{{item.price}}</span>
-                <span class="name">{{item.name}}</span>
-              </div>
-              <img src="../../assets/images/del.png" class="del-icon" alt="删除" title="删除" @click="delStock(item)">
+          <div
+            v-for="item in stockList"
+            :key="item.increase"
+            class="stockItem"
+            :title="`今开${item.open} 昨收${item.yestclose}&#10;最高${item.high} 最低${item.low}&#10;成交量${item.volume} 成交额${item.amount}`"
+            :class="{'stockGreen':item.increase < 0 }">
+            <div class="stockItem-main">
+              <span class="increase-icon" v-show="item.increase < 0">↓</span>
+              <span class="increase-icon" v-show="item.increase >= 0">↑</span>
+              <span class="increase">{{item.increase}}%</span>
+              <span class="price">{{item.price}}</span>
+              <span class="name">{{item.name}}</span>
             </div>
+            <img src="../../assets/images/del.png" class="del-icon" alt="删除" title="删除" @click="delStock(item)">
           </div>
         </div>
       </div>
@@ -60,7 +62,7 @@ import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
         showSearchInput: false,
         showSearchList: false,
         // 股票列表
-        stockListHide: true,
+        stockListHide: false,
         stockList: [],
         stockCodeList: []
       })
@@ -72,6 +74,11 @@ import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
         monitorKey(data)
         refreshData()
       });
+      // 显示搜索框
+      const showAddInput = () => {
+        data.showSearchInput = true
+        data.inputAutoFocus = true
+      }
       // 刷新数据
       const refreshData = () => {
         setInterval(() => {
@@ -167,7 +174,8 @@ import { getLocalStorage, setLocalStorage } from '../../assets/js/utils'
         searchStock,
         addStock,
         hideList,
-        delStock
+        delStock,
+        showAddInput
       };
     }
 	}
@@ -213,6 +221,18 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   * {
     box-sizing: border-box;
   }
+  .add-icon {
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+  }
+  .stock-title {
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    border-bottom: 1px solid rgb(204,204,204);
+  }
   .stockItem-main {
     display: flex;
     align-items: center;
@@ -250,7 +270,6 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   }
 	.stock-list{
     font-size: 14px;
-    padding: 10px;
     border-radius: 3px;
     border:1px solid rgb(204,204,204);
 		background: #ffffff;
@@ -276,9 +295,6 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     cursor: pointer;
     line-height: 2em;
     color: gray;
-    &:hover {
-      background: #eeeeee;
-    }
   }
   .searchBar {
     position: absolute;
@@ -304,6 +320,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   .stockItem {
     color: red;
     line-height: 26px;
+    padding: 0 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -312,6 +329,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
       margin-right: 10px;
     }
     &:hover {
+      background: rgb(245,247,250);
       .del-icon {
         display: inline-block;
       }
