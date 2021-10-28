@@ -42,7 +42,24 @@
               <span class="price">{{item.price}}</span>
               <span class="name">{{item.name}}</span>
             </div>
-            <img src="../../assets/images/del.png" class="del-icon" alt="删除" title="删除" @click="delStock(item)">
+            <div class="ops-ctn">
+              <img src="../../assets/images/warn.png"  @click="stockWarn(item)" alt="" class="add-icon" title="价格预警">
+              <img src="../../assets/images/del.png" class="del-icon" alt="删除" title="删除" @click="delStock(item)">
+            </div>
+          </div>
+          <!-- 添加预警弹窗 -->
+          <div class="warn-ctn" v-show="warnShow">
+            <div class="warn-main">
+              <div>
+                {{warnName}}【{{warnCode}}】
+              </div>
+              <div>当前价格：{{warnStockNowPrice}}</div>
+              <input type="number" v-model="warnPrice" min="0" placeholder="请输入预警价格" class="warn-input">
+              <div class="warn-btn-ctn">
+                <button style="margin-right:10px" @click="addWarn">确定</button>
+                <button @click="cancelWarn">取消</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -65,20 +82,76 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         showSearchList: false,
         // 股票列表
         sortType: 0,
-        stockListHide: true,
+        stockListHide: false,
         stockList: [],
-        stockCodeList: []
+        stockCodeList: [],
+        // 股价预警
+        warnList: {
+
+        },
+        warnShow: false,
+        warnCode: '',
+        warnPrice: '',
+        warnName: '',
+        warnStockNowPrice: ''
       })
       onMounted(async () => {
         getBgMessage();
         getLocalStorage('stockCodeList', (stockCodeList) => {
           data.stockCodeList = stockCodeList || []
         })
+        getLocalStorage('stockWarnList', (warnList) => {
+          data.warnList = warnList || []
+        })
         monitorKey(data)
         setInterval(() => {
           refreshData()
         }, 5000)
       });
+      // 股票预警
+      const stockWarn = (item) => {
+        data.warnCode = item.code
+        data.warnName = item.name
+        data.warnStockNowPrice = item.price
+        data.warnShow = true
+      }
+      const addWarn = () => {
+        if (!data.warnPrice) {
+          return
+        }
+        const flag = data.warnPrice - data.warnStockNowPrice > 0 ? 'rise' : 'fall'
+        const _data = data.warnList[data.warnCode]
+        let isRepect = false
+        if (_data) {
+          _data.forEach((item) => {
+            if (item.targetPrice === data.warnPrice) {
+              isRepect = true
+            }
+          })
+          if (isRepect) {
+            return
+          } else {
+            data.warnList[data.warnCode].push({
+              type: flag,
+              targetPrice: data.warnPrice
+            })
+          }
+        } else {
+          data.warnList[data.warnCode] = [{
+              type: flag,
+              targetPrice: data.warnPrice
+            }]
+        }
+        setLocalStorage('stockWarnList', data.warnList)
+        data.warnShow = false
+        data.warnCode = ''
+        data.warnName = ''
+      }
+      const cancelWarn = () => {
+        data.warnShow = false
+        data.warnCode = ''
+        data.warnName = ''
+      }
       // 显示搜索框
       const showAddInput = () => {
         data.showSearchInput = true
@@ -98,7 +171,13 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
             data: { codeList: data.stockCodeList }
           }, res => {
             res.forEach((item) => {
+              // 计算涨幅
               item.increase = ((item.price - item.yestclose) / item.yestclose * 100).toFixed(2)
+              // 如果当前有打开添加预警的弹窗，预警股票的价格要实时更新
+              if (data.warnCode && item.code === data.warnCode) {
+                data.warnStockNowPrice = item.price
+              }
+              // 判断是否达到预计阙值
             })
             data.stockList = sortStock(res, data.sortType)
           })
@@ -121,8 +200,11 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
       // 添加股票
       const addStock = (stockMsg) => {
         const code = stockMsg.label.substring(0, 8)
-        data.stockCodeList.push(code)
-        getStockList(data.stockCodeList)
+        console.log(data.stockCodeList.includes(code))
+        if (!data.stockCodeList.includes(code)) {
+          data.stockCodeList.push(code)
+          getStockList(data.stockCodeList)
+        }
       }
       // 隐藏股票列表
       const hideList = () => {
@@ -186,7 +268,10 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         delStock,
         showAddInput,
         refreshData,
-        sortData
+        sortData,
+        stockWarn,
+        cancelWarn,
+        addWarn
       };
     }
 	}
@@ -232,6 +317,30 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   * {
     box-sizing: border-box;
   }
+  .warn-input {
+    margin: 5px 0 10px;
+  }
+  .warn-btn-ctn {
+    text-align: center;
+  }
+  .warn-ctn {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    background: rgba(255, 255, 255, 0.8);
+    .warn-main {
+      border: 1px solid rgb(204,204,204);
+      padding:5px 10px;
+      width: 200px;
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%,0);
+    }
+  }
   .add-icon {
     cursor: pointer;
     width: 16px;
@@ -255,11 +364,18 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     }
   }
   .stockList-ctn {
+    position: relative;
     height: 100%;
     overflow-y: auto;
   }
+  .ops-ctn {
+   display: none;
+   align-items: center;
+   img {
+     margin-left: 10px;
+   }
+  }
   .del-icon {
-    display: none;
     width: 16px;
     height: 16px;
     cursor: pointer;
@@ -288,7 +404,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     border:1px solid rgb(204,204,204);
 		background: #ffffff;
 		position: fixed;
-    width: 250px;
+    width: 320px;
     height: 500px;
 		z-index: 100001;
 		right: 0;
@@ -344,8 +460,8 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     }
     &:hover {
       background: rgb(245,247,250);
-      .del-icon {
-        display: inline-block;
+      .ops-ctn {
+        display: flex;
       }
     }
 
