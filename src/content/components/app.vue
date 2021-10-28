@@ -65,7 +65,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         showSearchList: false,
         // 股票列表
         sortType: 0,
-        stockListHide: false,
+        stockListHide: true,
         stockList: [],
         stockCodeList: []
       })
