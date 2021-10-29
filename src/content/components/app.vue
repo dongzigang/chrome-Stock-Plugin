@@ -36,6 +36,7 @@
             :title="`今开${item.open} 昨收${item.yestclose}&#10;最高${item.high} 最低${item.low}&#10;成交量${item.volume} 成交额${item.amount}`"
             :class="{'stockGreen':item.increase < 0 }">
             <div class="stockItem-main">
+              <img src="../../assets/images/warning.png" class="warning-icon" title="价格预警" v-show="item.isWarn">
               <span class="increase-icon" v-show="item.increase < 0">↓</span>
               <span class="increase-icon" v-show="item.increase >= 0">↑</span>
               <span class="increase">{{item.increase}}%</span>
@@ -82,13 +83,11 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         showSearchList: false,
         // 股票列表
         sortType: 0,
-        stockListHide: true,
+        stockListHide: false,
         stockList: [],
         stockCodeList: [],
         // 股价预警
-        warnList: {
-
-        },
+        warnList: {},
         warnShow: false,
         warnCode: '',
         warnPrice: '',
@@ -121,14 +120,14 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         }
         const flag = data.warnPrice - data.warnStockNowPrice > 0 ? 'rise' : 'fall'
         const _data = data.warnList[data.warnCode]
-        let isRepect = false
+        let isRepeat = false
         if (_data) {
           _data.forEach((item) => {
             if (item.targetPrice === data.warnPrice) {
-              isRepect = true
+              isRepeat = true
             }
           })
-          if (isRepect) {
+          if (isRepeat) {
             return
           } else {
             data.warnList[data.warnCode].push({
@@ -176,6 +175,10 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
               // 如果当前有打开添加预警的弹窗，预警股票的价格要实时更新
               if (data.warnCode && item.code === data.warnCode) {
                 data.warnStockNowPrice = item.price
+              }
+              // 是否添加到了预警
+              if (data.warnList[item.code]) {
+                item.isWarn = true
               }
               // 判断是否达到预计阙值
             })
@@ -317,6 +320,13 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   * {
     box-sizing: border-box;
   }
+  .warning-icon {
+    position: absolute;
+    top: 6px;
+    left: -17px;
+    width: 12px;
+    height: 12px;
+  }
   .warn-input {
     margin: 5px 0 10px;
   }
@@ -357,6 +367,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     }
   }
   .stockItem-main {
+    position: relative;
     display: flex;
     align-items: center;
     .increase-icon {
@@ -450,7 +461,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   .stockItem {
     color: red;
     line-height: 26px;
-    padding: 0 10px;
+    padding: 0 10px 0 25px;
     display: flex;
     align-items: center;
     justify-content: space-between;
