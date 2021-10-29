@@ -82,7 +82,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         showSearchList: false,
         // 股票列表
         sortType: 0,
-        stockListHide: false,
+        stockListHide: true,
         stockList: [],
         stockCodeList: [],
         // 股价预警
@@ -412,7 +412,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     transition: all 1s inherit;
 	}
   .hideStockList {
-    right: -250px
+    right: -320px
   }
   .suggestList {
     border: 1px solid rgb(204,204,204);
