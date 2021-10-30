@@ -37,7 +37,7 @@ cnpm i -g cnpm 就好了
 
 1. 进入chrome扩展程序 chrome://extensions/
 
-2.打开开发者模式
+2. 打开开发者模式
 
 3. 点击加载已解压的扩展程序
 
