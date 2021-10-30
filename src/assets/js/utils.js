@@ -86,3 +86,37 @@ export const sortStock = (list = [], sortType = 0, key = 'increase') => {
     return _list
   }
 }
+
+/**
+ * 桌面通知
+ * 
+*/
+export const showNotification = (title, data) => {
+    //显示一个桌面通知
+    if (window.webkitNotifications) {
+      const notification = window.webkitNotifications.createNotification(
+          'assets/images/icon128.png', // icon url - can be relative
+          title, // notification title
+          data // notification body text
+      );
+      notification.show();        
+      // 设置3秒后，将桌面通知dismiss
+      setTimeout(() => { 
+        notification.cancel()
+      }, 300000);
+  } else if (chrome.notifications) {
+      const opt = {
+          type: 'basic',
+          title: title,
+          message: data,
+          iconUrl: 'assets/images/icon128.png'
+      }
+      chrome.notifications.create('', opt, function(id) {
+        setTimeout(() => {
+          chrome.notifications.clear(id, () => {});
+        }, 300000);
+      })
+  } else {
+    alert('亲，你的浏览器不支持啊！');
+  }
+}

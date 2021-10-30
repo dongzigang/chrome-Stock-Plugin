@@ -36,7 +36,11 @@
             :title="`今开${item.open} 昨收${item.yestclose}&#10;最高${item.high} 最低${item.low}&#10;成交量${item.volume} 成交额${item.amount}`"
             :class="{'stockGreen':item.increase < 0 }">
             <div class="stockItem-main">
-              <img src="../../assets/images/warning.png" class="warning-icon" title="价格预警" v-show="item.isWarn">
+              <img 
+              src="../../assets/images/warning.png" 
+              class="warning-icon" 
+              :title="`${item.warnTitle}`" 
+              v-show="item.isWarn">
               <span class="increase-icon" v-show="item.increase < 0">↓</span>
               <span class="increase-icon" v-show="item.increase >= 0">↑</span>
               <span class="increase">{{item.increase}}%</span>
@@ -75,6 +79,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
   export default {
     setup() {
       const data = reactive({
+        needRefreshData: true,
         // 搜索框
         status: false,
         searchKey: '',
@@ -106,7 +111,26 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         setInterval(() => {
           refreshData()
         }, 5000)
+        pageVisibilitychange()
       });
+      const pageVisibilitychange = () => {
+        document.addEventListener('visibilitychange', (event) => {
+          if (document.webkitHidden) {
+            data.needRefreshData = false
+          } else {
+            data.needRefreshData = true
+          }
+        })
+      }
+      // 发送桌面通知
+      const showNotification = (title, data) => {
+        window.sendMessageToBackgroundPopupScript({
+          greeting: 'showNotification',
+          data: { title, data }
+        }, res => {
+
+        })
+      }
       // 股票预警
       const stockWarn = (item) => {
         data.warnCode = item.code
@@ -114,6 +138,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         data.warnStockNowPrice = item.price
         data.warnShow = true
       }
+      // 添加预警
       const addWarn = () => {
         if (!data.warnPrice) {
           return
@@ -164,7 +189,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
       }
       // 刷新数据
       const refreshData = () => {
-        if (data.stockCodeList[0] && data.status && !data.stockListHide) {
+        if (data.stockCodeList[0] && data.status && data.needRefreshData) {
           window.sendMessageToBackgroundPopupScript({
             greeting: 'getStockList',
             data: { codeList: data.stockCodeList }
@@ -176,11 +201,28 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
               if (data.warnCode && item.code === data.warnCode) {
                 data.warnStockNowPrice = item.price
               }
-              // 是否添加到了预警
               if (data.warnList[item.code]) {
                 item.isWarn = true
+                item.warnTitle = ''
+                data.warnList[item.code].forEach((warnItem, index) => {
+                  // 添加到了预警提示
+                  item.warnTitle += warnItem.type === 'rise' ? '涨' : '跌'
+                  item.warnTitle += `到${warnItem.targetPrice}时预警`
+                  if (index < data.warnList[item.code].length - 1) {
+                    item.warnTitle += '//'
+                  }
+                  // 判断是否达到预计阙值
+                  if (warnItem.type === 'rise' && item.price >= warnItem.targetPrice) {
+                      showNotification('股票助手', `${item.name}【${item.code}】已涨到您设置的预警价位${warnItem.targetPrice}`);
+                      data.warnList[item.code].splice(index, 1)
+                      setLocalStorage('stockWarnList', data.warnList)
+                  } else if (warnItem.type === 'fall' && item.price <= warnItem.targetPrice) {
+                      showNotification('股票助手', `${item.name}【${item.code}】已跌到您设置的预警价位${warnItem.targetPrice}`);
+                      data.warnList[item.code].splice(index, 1)
+                      setLocalStorage('stockWarnList', data.warnList)
+                  }
+                })
               }
-              // 判断是否达到预计阙值
             })
             data.stockList = sortStock(res, data.sortType)
           })

@@ -1,5 +1,6 @@
 import hotReload from '@/utils/hotReload'
 import { getStockSuggestList, getStockList } from '../api/api'
+import { showNotification } from '../assets/js/utils'
 hotReload()
 const backInfo = {
   popopActive: true
@@ -32,6 +33,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     getStockList(request.data.codeList).then((res) => {
       sendResponse(res);
     })
+  } else if (request.greeting === 'showNotification') {
+    const data = request.data
+    showNotification(data.title, data.data)
   }
   return true;
 })
