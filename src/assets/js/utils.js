@@ -13,21 +13,40 @@ export async function request(params) {
   return result
 }
 
-export function getLocalStorage(key, callBack) {
+export function getLocalStorage(key) {
+  let result = localStorage.getItem(key)
+  try {
+      if (result) {
+          result = JSON.parse(result)
+      }
+  } finally {
+
+  }
+  return result
+}
+export function setLocalStorage(key, value) {
+  let _value = value
+  if (_value && typeof _value === 'object') {
+      _value = JSON.stringify(_value)
+  }
+  localStorage.setItem(key, _value)
+}
+export function getChromeLocalStorage(key, callBack) {
   try {
     chrome.storage.local.get(key, (data) => {
-      callBack && callBack(JSON.parse(data[key]))
+      if (data[key]) {
+        callBack && callBack(data[key])
+      } else {
+        callBack && callBack(null)
+      }
     });
   } finally {
 
   }
 }
-export function setLocalStorage(key, value) {
-  let _value = value
-  if (_value && typeof _value === 'object') {
-    _value = JSON.stringify(_value)
-  }
-  chrome.storage.local.set({[key]: _value}, function() {
+export function setChromeLocalStorage(key, value) {
+  console.log(value)
+  chrome.storage.local.set({[key]: value}, function() {
     console.log('保存股票成功')
   });
 }
@@ -103,7 +122,7 @@ export const showNotification = (title, data) => {
       // 设置3秒后，将桌面通知dismiss
       setTimeout(() => { 
         notification.cancel()
-      }, 300000);
+      }, 3000);
   } else if (chrome.notifications) {
       const opt = {
           type: 'basic',
@@ -114,7 +133,7 @@ export const showNotification = (title, data) => {
       chrome.notifications.create('', opt, function(id) {
         setTimeout(() => {
           chrome.notifications.clear(id, () => {});
-        }, 300000);
+        }, 3000);
       })
   } else {
     alert('亲，你的浏览器不支持啊！');

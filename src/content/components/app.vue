@@ -26,6 +26,8 @@
         <img src="../../assets/images/add.png"  @click="showAddInput" alt="" class="add-icon" title="添加股票">
         <img src="../../assets/images/refresh.png"  @click="refreshData" alt="" class="add-icon" title="刷新">
         <img src="../../assets/images/sort.png"  @click="sortData" alt="" class="add-icon" title="排序">
+        <img src="../../assets/images/save.png"  @click="save" alt="" class="add-icon" title="将自选股票及预警信息缓存到当前网站，当您需要重新安装本插件时可以进行此操作，重装完成后，请重新进入当前网站，点击旁边的导入按钮，即可恢复数据">
+        <img src="../../assets/images/import.png"  @click="importData" alt="" class="add-icon" title="将缓存在当前站点的数据重新载入">
       </div>
       <div class="stockList-ctn">
         <div class="stockList">
@@ -36,16 +38,16 @@
             :title="`今开${item.open} 昨收${item.yestclose}&#10;最高${item.high} 最低${item.low}&#10;成交量${item.volume} 成交额${item.amount}`"
             :class="{'stockGreen':item.increase < 0 }">
             <div class="stockItem-main">
-              <img 
-              src="../../assets/images/warning.png" 
-              class="warning-icon" 
-              :title="`${item.warnTitle}`" 
-              v-show="item.isWarn">
               <span class="increase-icon" v-show="item.increase < 0">↓</span>
               <span class="increase-icon" v-show="item.increase >= 0">↑</span>
               <span class="increase">{{item.increase}}%</span>
               <span class="price">{{item.price}}</span>
               <span class="name">{{item.name}}</span>
+              <img 
+               src="../../assets/images/warning.png" 
+               class="warning-icon" 
+               :title="`${item.warnTitle}`" 
+               v-show="item.isWarn">
             </div>
             <div class="ops-ctn">
               <img src="../../assets/images/warn.png"  @click="stockWarn(item)" alt="" class="add-icon" title="价格预警">
@@ -74,8 +76,8 @@
 </template>
 
 <script>
-import {reactive, toRefs, onMounted} from 'vue';
-import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/utils'
+import {reactive, toRefs, toRaw, onMounted} from 'vue';
+import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/utils'
   export default {
     setup() {
       const data = reactive({
@@ -88,7 +90,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         showSearchList: false,
         // 股票列表
         sortType: 0,
-        stockListHide: false,
+        stockListHide: true,
         stockList: [],
         stockCodeList: [],
         // 股价预警
@@ -101,11 +103,13 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
       })
       onMounted(async () => {
         getBgMessage();
-        getLocalStorage('stockCodeList', (stockCodeList) => {
-          data.stockCodeList = stockCodeList || []
+        getChromeLocalStorage('stockCodeList', (stockCodeList) => {
+          if (stockCodeList) {
+            data.stockCodeList = stockCodeList
+          }
         })
-        getLocalStorage('stockWarnList', (warnList) => {
-          data.warnList = warnList || []
+        getChromeLocalStorage('stockWarnList', (warnList) => {
+          data.warnList = warnList || {}
         })
         monitorKey(data)
         setInterval(() => {
@@ -166,7 +170,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
               targetPrice: data.warnPrice
             }]
         }
-        setLocalStorage('stockWarnList', data.warnList)
+        setChromeLocalStorage('stockWarnList', toRaw(data.warnList))
         data.warnShow = false
         data.warnCode = ''
         data.warnName = ''
@@ -215,11 +219,11 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
                   if (warnItem.type === 'rise' && item.price >= warnItem.targetPrice) {
                       showNotification('股票助手', `${item.name}【${item.code}】已涨到您设置的预警价位${warnItem.targetPrice}`);
                       data.warnList[item.code].splice(index, 1)
-                      setLocalStorage('stockWarnList', data.warnList)
+                      setChromeLocalStorage('stockWarnList', toRaw(data.warnList))
                   } else if (warnItem.type === 'fall' && item.price <= warnItem.targetPrice) {
                       showNotification('股票助手', `${item.name}【${item.code}】已跌到您设置的预警价位${warnItem.targetPrice}`);
                       data.warnList[item.code].splice(index, 1)
-                      setLocalStorage('stockWarnList', data.warnList)
+                      setChromeLocalStorage('stockWarnList', toRaw(data.warnList))
                   }
                 })
               }
@@ -235,7 +239,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
             data.stockCodeList.splice(index, 1)
           }
         })
-        setLocalStorage('stockCodeList', data.stockCodeList)
+        setChromeLocalStorage('stockCodeList', toRaw(data.stockCodeList))
         data.stockList.forEach((item, index) => {
           if (item.code === stock.code) {
             data.stockList.splice(index, 1)
@@ -274,7 +278,7 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
           const codeList = res.map((item) => {
             return item.code
           })
-          setLocalStorage('stockCodeList', codeList)
+          setChromeLocalStorage('stockCodeList', codeList)
           res.forEach((item) => {
             item.increase = ((item.price - item.yestclose) / item.yestclose * 100).toFixed(2)
           })
@@ -304,6 +308,39 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         }
         sendResponse();
       });
+      // 将数据缓存到当前站点
+      const save = () => {
+        if (data.stockCodeList[0]) {
+          setLocalStorage('stockCodeList', data.stockCodeList)
+          setLocalStorage('stockWarnList', data.warnList)
+          console.log(data.warnList)
+          alert('自选股票及预警信息已缓存到当前网站，请您重新安装安装完成插件后回到当前网站点击导入按钮')
+        }
+      }
+      // 导入
+      const importData = () => {
+        const stockCodeList = getLocalStorage('stockCodeList') || '[]'
+        const stockWarnList = getLocalStorage('stockWarnList') || '{}'
+        console.log(stockWarnList)
+        if (data.stockCodeList && data.stockCodeList[0]) {
+          const r = confirm('当前列表已有自选股票，继续导入将会覆盖当前列表，是否继续导入？');
+          if (r === true) {
+              data.stockCodeList = stockCodeList
+              data.warnList = stockWarnList
+              setChromeLocalStorage('stockWarnList', stockWarnList)
+              setChromeLocalStorage('stockCodeList', stockCodeList)
+              alert('导入成功')
+          } else {
+              
+          }
+        } else {
+          data.stockCodeList = stockCodeList
+          data.warnList = stockWarnList
+          setChromeLocalStorage('stockWarnList', stockWarnList)
+          setChromeLocalStorage('stockCodeList', stockCodeList)
+          alert('导入成功')
+        }
+      }
       return {
         ...toRefs(data),
         getBgMessage,
@@ -316,7 +353,9 @@ import { getLocalStorage, setLocalStorage, sortStock } from '../../assets/js/uti
         sortData,
         stockWarn,
         cancelWarn,
-        addWarn
+        addWarn,
+        save,
+        importData
       };
     }
 	}
@@ -363,14 +402,13 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     box-sizing: border-box;
   }
   .warning-icon {
-    position: absolute;
-    top: 6px;
-    left: -17px;
+    margin-left: 5px;
     width: 12px;
     height: 12px;
   }
   .warn-input {
     margin: 5px 0 10px;
+    border: 1px solid rgb(204,204,204);
   }
   .warn-btn-ctn {
     text-align: center;
@@ -384,6 +422,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     z-index: 1;
     background: rgba(255, 255, 255, 0.8);
     .warn-main {
+      background: #ffffff;
       border: 1px solid rgb(204,204,204);
       padding:5px 10px;
       width: 200px;
@@ -439,7 +478,9 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   }
   .price {
     display: inline-block;
-    width: 60px;
+    width: 76px;
+    text-align: right;
+    padding-right: 10px;
   }
   .open-icon {
     cursor: pointer;
@@ -457,7 +498,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     border:1px solid rgb(204,204,204);
 		background: #ffffff;
 		position: fixed;
-    width: 320px;
+    width: 300px;
     height: 500px;
 		z-index: 100001;
 		right: 0;
@@ -465,7 +506,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     transition: all 1s inherit;
 	}
   .hideStockList {
-    right: -320px
+    right: -300px
   }
   .suggestList {
     border: 1px solid rgb(204,204,204);
@@ -480,7 +521,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     color: gray;
   }
   .searchBar {
-    position: absolute;
+    position: fixed;
     top: -60px;
     left: 50%;
     width: 500px;
@@ -503,7 +544,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   .stockItem {
     color: red;
     line-height: 26px;
-    padding: 0 10px 0 25px;
+    padding: 0 10px;
     display: flex;
     align-items: center;
     justify-content: space-between;
