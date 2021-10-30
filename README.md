@@ -37,9 +37,11 @@ cnpm i -g cnpm 就好了
 
 1. 进入chrome扩展程序 chrome://extensions/
 
-2. 点击加载已解压的扩展程序
+2.打开开发者模式
 
-3. 选择打包好的dist 目录文件夹，即可安装成功，或者直接<a href="https://gitee.com/dongzigang/chrome-Stock-Plugin/blob/master/%E8%82%A1%E7%A5%A8%E5%8A%A9%E6%89%8BV1.0.0.zip" taeget="_blank">下载压缩包</a>解压
+4. 点击加载已解压的扩展程序
+
+4. 选择打包好的dist 目录文件夹，即可安装成功，或者直接<a href="https://gitee.com/dongzigang/chrome-Stock-Plugin/blob/master/%E8%82%A1%E7%A5%A8%E5%8A%A9%E6%89%8BV1.0.0.zip" taeget="_blank">下载压缩包</a>解压
 
 
 #### 截图
