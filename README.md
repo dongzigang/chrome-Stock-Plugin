@@ -25,7 +25,7 @@ cnpm i -g cnpm 就好了
 
 #### 使用说明
 
-1. 进入 <a href="chrome://extensions/" target="_blank">扩展程序</a>
+1. 进入chrome扩展程序 chrome://extensions/
 
 2. 点击加载已解压的扩展程序
 
