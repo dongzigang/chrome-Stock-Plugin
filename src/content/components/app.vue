@@ -43,10 +43,10 @@
               <span class="increase">{{item.increase}}%</span>
               <span class="price">{{item.price}}</span>
               <span class="name">{{item.name}}</span>
-              <img 
-               src="../../assets/images/warning.png" 
-               class="warning-icon" 
-               :title="`${item.warnTitle}`" 
+              <img
+               src="../../assets/images/warning.png"
+               class="warning-icon"
+               :title="`${item.warnTitle}`"
                v-show="item.isWarn">
             </div>
             <div class="ops-ctn">
@@ -331,7 +331,7 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
               setChromeLocalStorage('stockCodeList', stockCodeList)
               alert('导入成功')
           } else {
-              
+
           }
         } else {
           data.stockCodeList = stockCodeList
@@ -473,12 +473,14 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     cursor: pointer;
   }
   .increase {
+    text-align: right;
     display: inline-block;
-    width: 60px;
+    width: 56px;
+    margin-right: 8px;
   }
   .price {
     display: inline-block;
-    width: 76px;
+    width: 80px;
     text-align: right;
     padding-right: 10px;
   }
