@@ -313,7 +313,6 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         if (data.stockCodeList[0]) {
           setLocalStorage('stockCodeList', data.stockCodeList)
           setLocalStorage('stockWarnList', data.warnList)
-          console.log(data.warnList)
           alert('自选股票及预警信息已缓存到当前网站，请您重新安装安装完成插件后回到当前网站点击导入按钮')
         }
       }
@@ -500,7 +499,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     border:1px solid rgb(204,204,204);
 		background: #ffffff;
 		position: fixed;
-    width: 300px;
+    width: 320px;
     height: 500px;
 		z-index: 100001;
 		right: 0;
@@ -508,7 +507,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     transition: all 1s inherit;
 	}
   .hideStockList {
-    right: -300px
+    right: -320px
   }
   .suggestList {
     border: 1px solid rgb(204,204,204);

@@ -102,13 +102,14 @@ export const sortStock = (list = [], sortType = 0, key = 'increase') => {
     _list.sort((a, b) => {
       return b[key] - a[key]
     })
-    return _list
+
+    return Array.from(new Set(_list))
   }
 }
 
 /**
  * 桌面通知
- * 
+ *
 */
 export const showNotification = (title, data) => {
     //显示一个桌面通知
@@ -118,9 +119,9 @@ export const showNotification = (title, data) => {
           title, // notification title
           data // notification body text
       );
-      notification.show();        
+      notification.show();
       // 设置3秒后，将桌面通知dismiss
-      setTimeout(() => { 
+      setTimeout(() => {
         notification.cancel()
       }, 3000);
   } else if (chrome.notifications) {
