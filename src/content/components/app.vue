@@ -23,6 +23,7 @@
     <!--  股票列表  -->
     <div class="stock-list" :class="{'hideStockList': stockListHide}">
       <div class="stock-title">
+        {{stockList.length}}
         <img src="../../assets/images/add.png"  @click="showAddInput" alt="" class="add-icon" title="添加股票">
         <img src="../../assets/images/refresh.png"  @click="refreshData" alt="" class="add-icon" title="刷新">
         <img src="../../assets/images/sort.png"  @click="sortData" alt="" class="add-icon" title="排序">
@@ -30,19 +31,23 @@
         <img src="../../assets/images/import.png"  @click="importData" alt="" class="add-icon" title="将缓存在当前站点的数据重新载入">
       </div>
       <div class="stockList-ctn">
-        <div class="stockList">
+        <div class="stockList" v-if="!listLoading">
           <div
             v-for="item in stockList"
             :key="item.increase"
             class="stockItem"
-            :title="`今开${item.open} 昨收${item.yestclose}&#10;最高${item.high} 最低${item.low}&#10;成交量${item.volume} 成交额${item.amount}`"
+            :title="`${item.name} ${item.code}&#10;今开${item.open} 昨收${item.yestclose}&#10;最高${item.high} 最低${item.low}&#10;成交量${item.volume} 成交额${item.amount}`"
             :class="{'stockGreen':item.increase < 0 }">
             <div class="stockItem-main">
               <span class="increase-icon" v-show="item.increase < 0">↓</span>
               <span class="increase-icon" v-show="item.increase >= 0">↑</span>
               <span class="increase">{{item.increase}}%</span>
               <span class="price">{{item.price}}</span>
-              <span class="name">{{item.name}}</span>
+              <span class="name">
+                {{item.name}}
+                <span class="us-icon" v-if="item.code.startsWith('us')">us</span>
+                <span class="hk-icon" v-if="item.code.startsWith('hk')">hk</span>
+              </span>
               <img
                src="../../assets/images/warning.png"
                class="warning-icon"
@@ -89,6 +94,7 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         showSearchInput: false,
         showSearchList: false,
         // 股票列表
+        listLoading: false,
         sortType: 0,
         stockListHide: true,
         stockList: [],
@@ -194,10 +200,12 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
       // 刷新数据
       const refreshData = () => {
         if (data.stockCodeList[0] && data.status && data.needRefreshData) {
+          // data.listLoading = true
           window.sendMessageToBackgroundPopupScript({
             greeting: 'getStockList',
             data: { codeList: data.stockCodeList }
           }, res => {
+            // data.listLoading = false
             res.forEach((item) => {
               // 计算涨幅
               item.increase = ((item.price - item.yestclose) / item.yestclose * 100).toFixed(2)
@@ -248,8 +256,13 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
       }
       // 添加股票
       const addStock = (stockMsg) => {
-        const code = stockMsg.label.substring(0, 8)
-        console.log(data.stockCodeList.includes(code))
+        let code = ''
+        if (stockMsg.description === '美股') {
+          code = 'usr_' + stockMsg.label.split(' | ')[0].substring(2)
+        } else {
+          code = stockMsg.label.substring(0, 8)
+        }
+        console.log(code)
         if (!data.stockCodeList.includes(code)) {
           data.stockCodeList.push(code)
           getStockList(data.stockCodeList)
@@ -399,6 +412,24 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
 <style lang="less" scoped>
   * {
     box-sizing: border-box;
+  }
+  .us-icon {
+    color: #ffffff;
+    display: inline-block;
+    height: 14px;
+    line-height: 14px;
+    font-size: 12px;
+    transform: scale(0.8);
+    background: rgba(149, 69, 96);
+  }
+  .hk-icon {
+    color: #ffffff;
+    display: inline-block;
+    height: 14px;
+    line-height: 14px;
+    font-size: 12px;
+    transform: scale(0.8);
+    background: rgba(55, 88, 150);
   }
   .warning-icon {
     margin-left: 5px;
