@@ -196,6 +196,9 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         const _sortType = data.sortType + 1 === 2 ? -1 : data.sortType + 1
         data.sortType = _sortType
         data.stockList = sortStock(data.stockList, _sortType)
+        if (_sortType === 0) {
+          refreshData()
+        }
       }
       // 刷新数据
       const refreshData = () => {

@@ -95,12 +95,12 @@ export const sortStock = (list = [], sortType = 0, key = 'increase') => {
     return _list
   } else if (sortType === 1) {
     _list.sort((a, b) => {
-      return a[key] - b[key]
+      return b[key] - a[key]
     })
     return _list
   } else if (sortType === -1) {
     _list.sort((a, b) => {
-      return b[key] - a[key]
+      return a[key] - b[key]
     })
 
     return Array.from(new Set(_list))
