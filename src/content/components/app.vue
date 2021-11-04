@@ -297,7 +297,7 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         if (stockMsg.description === '美股') {
           code = 'usr_' + stockMsg.label.split(' | ')[0].substring(2)
         } else {
-          code = stockMsg.label.substring(0, 8)
+          code = stockMsg.label.split(' | ')[0]
         }
         if (!data.stockCodeList.includes(code)) {
           data.stockCodeList.push(code)
@@ -320,6 +320,7 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         }
       }
       const getStockList = (codeList) => {
+        setChromeLocalStorage('stockCodeList', toRaw(codeList))
         window.sendMessageToBackgroundPopupScript({
           greeting: 'getStockList',
           data: { codeList }
@@ -327,7 +328,6 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
           const codeList = res.map((item) => {
             return item.code
           })
-          setChromeLocalStorage('stockCodeList', codeList)
           res.forEach((item) => {
             item.increase = ((item.price - item.yestclose) / item.yestclose * 100).toFixed(2)
           })
