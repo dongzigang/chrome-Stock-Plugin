@@ -23,7 +23,6 @@
     <!--  股票列表  -->
     <div class="stock-list" :class="{'hideStockList': stockListHide}">
       <div class="stock-title">
-        {{stockList.length}}
         <img src="../../assets/images/add.png"  @click="showAddInput" alt="" class="add-icon" title="添加股票">
         <img src="../../assets/images/refresh.png"  @click="refreshData" alt="" class="add-icon" title="刷新">
         <img src="../../assets/images/sort.png"  @click="sortData" alt="" class="add-icon" title="排序">
@@ -33,21 +32,22 @@
       <div class="stockList-ctn">
         <div class="stockList" v-if="!listLoading">
           <div
-            v-for="item in stockList"
+            v-for="(item, index) in stockList"
             :key="item.increase"
             class="stockItem"
+            :class="{'stockGreen':item.increase < 0 }"
             :title="`${item.name} ${item.code}&#10;今开${item.open} 昨收${item.yestclose}&#10;最高${item.high} 最低${item.low}&#10;成交量${item.volume} 成交额${item.amount}`"
-            :class="{'stockGreen':item.increase < 0 }">
+            @contextmenu="showContextmenu(item, index, $event)">
             <div class="stockItem-main">
               <span class="increase-icon" v-show="item.increase < 0">↓</span>
               <span class="increase-icon" v-show="item.increase >= 0">↑</span>
               <span class="increase">{{item.increase}}%</span>
               <span class="price">{{item.price}}</span>
-              <span class="name">
-                {{item.name}}
+              <div style="display: flex;align-items: center">
+                <span class="name">{{item.name}}</span>
                 <span class="us-icon" v-if="item.code.startsWith('us')">us</span>
                 <span class="hk-icon" v-if="item.code.startsWith('hk')">hk</span>
-              </span>
+              </div>
               <img
                src="../../assets/images/warning.png"
                class="warning-icon"
@@ -55,7 +55,6 @@
                v-show="item.isWarn">
             </div>
             <div class="ops-ctn">
-              <img src="../../assets/images/warn.png"  @click="stockWarn(item)" alt="" class="add-icon" title="价格预警">
               <img src="../../assets/images/del.png" class="del-icon" alt="删除" title="删除" @click="delStock(item)">
             </div>
           </div>
@@ -74,6 +73,12 @@
             </div>
           </div>
         </div>
+        <!--    右键菜单    -->
+        <div id="stockRightMenu">
+          <div class="menu" @click="changePosition('top')">置顶</div>
+          <div class="menu" @click="changePosition('bottom')">置底</div>
+          <div class="menu" @click="stockWarn">股价预警</div>
+        </div>
       </div>
       <img src="../../assets/images/open.png" class="open-icon" @click="hideList">
     </div>
@@ -87,6 +92,8 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
     setup() {
       const data = reactive({
         needRefreshData: true,
+        rightClickItem:{},
+        rightClickIndex:-1,
         // 搜索框
         status: false,
         searchKey: '',
@@ -98,7 +105,7 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         sortType: 0,
         stockListHide: true,
         stockList: [],
-        stockCodeList: [],
+        stockCodeList: ['sh000001','sz399001','sz399006'],
         // 股价预警
         warnList: {},
         warnShow: false,
@@ -110,8 +117,8 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
       onMounted(async () => {
         getBgMessage();
         getChromeLocalStorage('stockCodeList', (stockCodeList) => {
-          if (stockCodeList) {
-            data.stockCodeList = stockCodeList
+          if (stockCodeList && stockCodeList[0]) {
+            data.stockCodeList = Array.from(new Set(stockCodeList))
           }
         })
         getChromeLocalStorage('stockWarnList', (warnList) => {
@@ -123,6 +130,32 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         }, 5000)
         pageVisibilitychange()
       });
+      const changePosition = (type) => {
+        const index = data.rightClickIndex
+        const target = {...data.stockList[index]}
+        const targetCode = data.stockCodeList[index]
+        data.stockList.splice(index,1)
+        data.stockCodeList.splice(index,1)
+        if (type === 'top') {
+          data.stockList.unshift(target)
+          data.stockCodeList.unshift(targetCode)
+        } else {
+          data.stockList.push(target)
+          data.stockCodeList.push(targetCode)
+        }
+        setChromeLocalStorage('stockCodeList', toRaw(data.stockCodeList))
+      }
+      // 右键菜单
+      const showContextmenu = (item, index, e) => {
+        e.preventDefault();
+        data.rightClickItem = item
+        data.rightClickIndex = index
+        const menu = document.querySelector("#stockRightMenu");
+        menu.style.left = e.clientX+'px';
+        menu.style.top = e.clientY+'px';
+        menu.style.width = '90px';
+      }
+      // 页面激活判断
       const pageVisibilitychange = () => {
         document.addEventListener('visibilitychange', (event) => {
           if (document.webkitHidden) {
@@ -142,7 +175,8 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         })
       }
       // 股票预警
-      const stockWarn = (item) => {
+      const stockWarn = () => {
+        const item = data.rightClickItem
         data.warnCode = item.code
         data.warnName = item.name
         data.warnStockNowPrice = item.price
@@ -265,7 +299,6 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         } else {
           code = stockMsg.label.substring(0, 8)
         }
-        console.log(code)
         if (!data.stockCodeList.includes(code)) {
           data.stockCodeList.push(code)
           getStockList(data.stockCodeList)
@@ -370,7 +403,9 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         cancelWarn,
         addWarn,
         save,
-        importData
+        importData,
+        showContextmenu,
+        changePosition,
       };
     }
 	}
@@ -386,6 +421,10 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         state.showSearchList = false
         state.searchKey = ''
       }
+    }
+    window.onclick = () => {
+      const menu=document.querySelector("#stockRightMenu");
+      menu.style.width = '0px';
     }
   }
 
@@ -416,6 +455,25 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
   * {
     box-sizing: border-box;
   }
+  #stockRightMenu{
+    background: #ffffff;
+    width: 0;
+    overflow: hidden;
+    box-shadow: 0 1px 1px #888,1px 0 1px #ccc;
+    position: fixed;
+    z-index: 999999;
+  }
+  .menu{
+    cursor: pointer;
+    text-align: left;
+    width: 90px;
+    height: 25px;
+    line-height: 25px;
+    padding: 0 10px;
+    &:hover {
+      background: #eeeeee;
+    }
+  }
   .us-icon {
     color: #ffffff;
     display: inline-block;
@@ -424,6 +482,13 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     font-size: 12px;
     transform: scale(0.8);
     background: rgba(149, 69, 96);
+  }
+  .name {
+    display: inline-block;
+    width: 70px;
+    text-overflow:ellipsis;
+    overflow: hidden;
+    white-space:nowrap;
   }
   .hk-icon {
     color: #ffffff;
@@ -533,7 +598,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     border:1px solid rgb(204,204,204);
 		background: #ffffff;
 		position: fixed;
-    width: 320px;
+    width: 300px;
     height: 500px;
 		z-index: 100001;
 		right: 0;
@@ -541,7 +606,7 @@ window.sendMessageToBackgroundPopupScript = (message, callback) => {
     transition: all 1s inherit;
 	}
   .hideStockList {
-    right: -320px
+    right: -300px
   }
   .suggestList {
     border: 1px solid rgb(204,204,204);
