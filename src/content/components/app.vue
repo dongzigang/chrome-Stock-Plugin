@@ -28,6 +28,7 @@
         <img src="../../assets/images/sort.png"  @click="sortData" alt="" class="add-icon" title="排序">
         <img src="../../assets/images/save.png"  @click="save" alt="" class="add-icon" title="将自选股票及预警信息缓存到当前网站，当您需要重新安装本插件时可以进行此操作，重装完成后，请重新进入当前网站，点击旁边的导入按钮，即可恢复数据">
         <img src="../../assets/images/import.png"  @click="importData" alt="" class="add-icon" title="将缓存在当前站点的数据重新载入">
+        <img src="../../assets/images/clear.png"  @click="clearData" alt="" class="add-icon" title="清理全部数据">
       </div>
       <div class="stockList-ctn">
         <div class="stockList" v-if="!listLoading">
@@ -92,8 +93,8 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
     setup() {
       const data = reactive({
         needRefreshData: true,
-        rightClickItem:{},
-        rightClickIndex:-1,
+        rightClickItem: {},
+        rightClickIndex: -1,
         // 搜索框
         status: false,
         searchKey: '',
@@ -105,7 +106,7 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         sortType: 0,
         stockListHide: true,
         stockList: [],
-        stockCodeList: ['sh000001','sz399001','sz399006'],
+        stockCodeList: ['sh000001', 'sz399001', 'sz399006'],
         // 股价预警
         warnList: {},
         warnShow: false,
@@ -134,11 +135,12 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         const index = data.rightClickIndex
         const target = {...data.stockList[index]}
         const targetCode = data.stockCodeList[index]
-        data.stockList.splice(index,1)
-        data.stockCodeList.splice(index,1)
+        data.stockList.splice(index, 1)
+        data.stockCodeList.splice(index, 1)
         if (type === 'top') {
           data.stockList.unshift(target)
           data.stockCodeList.unshift(targetCode)
+          console.log(data.stockCodeList)
         } else {
           data.stockList.push(target)
           data.stockCodeList.push(targetCode)
@@ -147,12 +149,13 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
       }
       // 右键菜单
       const showContextmenu = (item, index, e) => {
+        console.log(index)
         e.preventDefault();
         data.rightClickItem = item
         data.rightClickIndex = index
-        const menu = document.querySelector("#stockRightMenu");
-        menu.style.left = e.clientX+'px';
-        menu.style.top = e.clientY+'px';
+        const menu = document.querySelector('#stockRightMenu');
+        menu.style.left = e.clientX + 'px';
+        menu.style.top = e.clientY + 'px';
         menu.style.width = '90px';
       }
       // 页面激活判断
@@ -320,7 +323,6 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         }
       }
       const getStockList = (codeList) => {
-        setChromeLocalStorage('stockCodeList', toRaw(codeList))
         window.sendMessageToBackgroundPopupScript({
           greeting: 'getStockList',
           data: { codeList }
@@ -328,10 +330,14 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
           const codeList = res.map((item) => {
             return item.code
           })
+          let _codeList = []
           res.forEach((item) => {
+            _codeList.push(item.code)
             item.increase = ((item.price - item.yestclose) / item.yestclose * 100).toFixed(2)
           })
           data.stockList = sortStock(res, data.sortType)
+          data.stockCodeList = _codeList
+          setChromeLocalStorage('stockCodeList', _codeList)
         })
       }
       // 页面加载时获取当前的插件状态
@@ -369,7 +375,6 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
       const importData = () => {
         const stockCodeList = getLocalStorage('stockCodeList') || '[]'
         const stockWarnList = getLocalStorage('stockWarnList') || '{}'
-        console.log(stockWarnList)
         if (data.stockCodeList && data.stockCodeList[0]) {
           const r = confirm('当前列表已有自选股票，继续导入将会覆盖当前列表，是否继续导入？');
           if (r === true) {
@@ -389,6 +394,13 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
           alert('导入成功')
         }
       }
+      const clearData = () => {
+        data.stockCodeList = []
+        data.stockList = []
+        data.warnList = {}
+        setChromeLocalStorage('stockCodeList', toRaw(data.stockCodeList))
+        setChromeLocalStorage('stockWarnList', toRaw(data.warnList))
+      }
       return {
         ...toRefs(data),
         getBgMessage,
@@ -406,6 +418,7 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
         importData,
         showContextmenu,
         changePosition,
+        clearData
       };
     }
 	}
@@ -423,7 +436,7 @@ import { getChromeLocalStorage, setChromeLocalStorage, getLocalStorage, setLocal
       }
     }
     window.onclick = () => {
-      const menu=document.querySelector("#stockRightMenu");
+      const menu = document.querySelector('#stockRightMenu');
       menu.style.width = '0px';
     }
   }
