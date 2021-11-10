@@ -1,10 +1,11 @@
-chrome 股票实时预览插件，隐蔽性强
+#chrome-Stock-Plugin
+chrome 股票实时预览插件
 
 #### 介绍
 
 股票助手
 
-chrome 股票实时预览插件，隐蔽性强，适合上班摸鱼 :stuck_out_tongue_closed_eyes: 
+chrome 股票实时预览插件，适合上班摸鱼 :stuck_out_tongue_closed_eyes: 
 
 #### 功能
 
@@ -14,6 +15,7 @@ chrome 股票实时预览插件，隐蔽性强，适合上班摸鱼 :stuck_out_t
 
 3.预警
 
+4.置顶置底
 
 #### 软件架构
 
