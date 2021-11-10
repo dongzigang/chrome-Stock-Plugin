@@ -50,6 +50,3 @@ cnpm i -g vue-loader-v16 就好了
 
 ![输入图片说明](https://images.gitee.com/uploads/images/2021/1110/162319_158f4400_1522769.png "股票助手.png")
 
-
-
-#### 特技
