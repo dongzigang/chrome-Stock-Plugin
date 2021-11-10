@@ -34,7 +34,7 @@
         <div class="stockList" v-if="!listLoading">
           <div
             v-for="(item, index) in stockList"
-            :key="item.increase"
+            :key="item.code"
             class="stockItem"
             :class="{'stockGreen':item.increase < 0 }"
             :title="`${item.name} ${item.code}&#10;今开${item.open} 昨收${item.yestclose}&#10;最高${item.high} 最低${item.low}&#10;成交量${item.volume} 成交额${item.amount}`"
