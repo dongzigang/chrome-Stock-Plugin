@@ -1,4 +1,4 @@
-#chrome-Stock-Plugin
+# chrome-Stock-Plugin
 chrome 股票实时预览插件
 
 #### 介绍
