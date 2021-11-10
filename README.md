@@ -30,7 +30,7 @@ vue 3.0
 
 如果遇到报错 Cannot find module 'vue-loader-v16/package.json'
 
-cnpm i -g cnpm 就好了
+cnpm i -g vue-loader-v16 就好了
 
 打包：npm run build
 
@@ -48,7 +48,7 @@ cnpm i -g cnpm 就好了
 
 #### 截图
 
-![输入图片说明](https://images.gitee.com/uploads/images/2021/1030/213954_3be9918f_1522769.png "股票助手-截图.png")
+![输入图片说明](https://images.gitee.com/uploads/images/2021/1110/162319_158f4400_1522769.png "股票助手.png")
 
 
 
