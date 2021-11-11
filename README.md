@@ -7,6 +7,9 @@ chrome 股票实时预览插件
 
 chrome 股票实时预览插件，适合上班摸鱼 :stuck_out_tongue_closed_eyes: 
 
+
+(由于现在github被墙的厉害，开发仓库已迁到码云，最新代码:<a href="https://gitee.com/dongzigang/chrome-Stock-Plugin">https://gitee.com/dongzigang/chrome-Stock-Plugin</a> )
+
 #### 功能
 
 1.添加自选股票
